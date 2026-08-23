@@ -122,6 +122,35 @@ function carregarPromocoes() {
     }
 }
 
+// ========== CONFIGURACAO VISUAL ==========
+const CONFIG_VISUAL_FILE = path.join(__dirname, 'config-monitor.json');
+const LOGO_CUSTOM_FILE = path.join(__dirname, 'public', 'logo-custom.png');
+
+function carregarConfigVisual() {
+    try {
+        const data = fs.readFileSync(CONFIG_VISUAL_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch(e) {
+        return {
+            logoUrl: '/logo.png',
+            idleBrand: 'TO GO',
+            idleBrandSub: 'MERCADO 24 HORAS',
+            idleText: 'Aguardando clientes',
+            idleSub: 'BEM-VINDO A NOSSA LOJA',
+            welcomeLabel: 'Bem-vindo',
+            welcomeTitle: 'A NOSSA LOJA',
+            welcomeSub: 'Estamos felizes em recebe-lo',
+            fonts: {},
+            sizes: {},
+            colors: {}
+        };
+    }
+}
+
+function salvarConfigVisual(data) {
+    fs.writeFileSync(CONFIG_VISUAL_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
 // ========== SERVIDOR HTTP ==========
 const server = http.createServer((req, res) => {
     const url = req.url.split('?')[0];
@@ -248,6 +277,53 @@ const server = http.createServer((req, res) => {
     if (url === '/api/monitor/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, estado: estado, config: config }));
+        return;
+    }
+
+    // Configuracao visual
+    if (url === '/api/monitor/config-visual') {
+        if (req.method === 'POST') {
+            let body = '';
+            req.on('data', c => body += c);
+            req.on('end', () => {
+                try {
+                    const nova = JSON.parse(body);
+                    const cfg = carregarConfigVisual();
+
+                    // Se veio logo em base64, salva em arquivo
+                    if (nova.logoBase64) {
+                        const base64Data = nova.logoBase64.replace(/^data:image\/\w+;base64,/, '');
+                        fs.writeFileSync(LOGO_CUSTOM_FILE, Buffer.from(base64Data, 'base64'));
+                        cfg.logoUrl = '/logo-custom.png';
+                        delete nova.logoBase64;
+                    }
+
+                    Object.assign(cfg, nova);
+                    salvarConfigVisual(cfg);
+                    log('CONFIG-VISUAL', JSON.stringify(cfg));
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: true, config: cfg }));
+                } catch(e) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: e.message }));
+                }
+            });
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, config: carregarConfigVisual() }));
+        }
+        return;
+    }
+
+    // Logo customizado
+    if (url === '/logo-custom.png') {
+        if (fs.existsSync(LOGO_CUSTOM_FILE)) {
+            res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache' });
+            res.end(fs.readFileSync(LOGO_CUSTOM_FILE));
+        } else {
+            res.writeHead(404);
+            res.end('Logo customizado nao encontrado');
+        }
         return;
     }
 
