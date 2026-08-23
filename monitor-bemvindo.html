@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Boas-vindas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            background: #060612;
+        }
+
+        .bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at 50% 40%, #1a1a3e 0%, #0d0d22 40%, #060612 100%);
+        }
+
+        #particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .idle-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        .idle-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .idle-logo-ring {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            border: 3px solid rgba(217, 183, 89, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            animation: idlePulse 3s ease-in-out infinite;
+            position: relative;
+        }
+        .idle-logo-ring::after {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 1px solid rgba(217, 183, 89, 0.08);
+            animation: idlePulse 3s ease-in-out infinite 0.5s;
+        }
+        @keyframes idlePulse {
+            0%, 100% { transform: scale(1); border-color: rgba(217, 183, 89, 0.15); }
+            50% { transform: scale(1.05); border-color: rgba(217, 183, 89, 0.35); }
+        }
+
+        .idle-logo-container {
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            animation: idlePulse 3s ease-in-out infinite;
+            position: relative;
+        }
+        .idle-logo-container::after {
+            content: '';
+            position: absolute;
+            inset: -12px;
+            border-radius: 50%;
+            border: 1px solid rgba(217, 183, 89, 0.08);
+            animation: idlePulse 3s ease-in-out infinite 0.5s;
+        }
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 30px rgba(217, 183, 89, 0.25));
+        }
+        .logo-small {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 20px rgba(217, 183, 89, 0.3));
+        }
+
+        .idle-text {
+            color: rgba(255,255,255,0.3);
+            font-size: 1.3rem;
+            font-weight: 300;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .idle-text-small {
+            color: rgba(255,255,255,0.15);
+            font-size: 0.85rem;
+            margin-top: 0.6rem;
+            letter-spacing: 0.25rem;
+        }
+        .idle-brand {
+            color: #d9b759;
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 0.15rem;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 1.5rem;
+            text-shadow: 0 0 40px rgba(217, 183, 89, 0.4);
+        }
+        .idle-brand-sub {
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.1rem;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 0.4rem;
+        }
+
+        .welcome-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.9);
+            transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .welcome-container.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        .welcome-icon {
+            width: 120px; height: 120px;
+            background: linear-gradient(135deg, #d9b759 0%, #f0d878 50%, #c9a73c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 80px rgba(217, 183, 89, 0.4), 0 0 160px rgba(217, 183, 89, 0.15);
+            animation: welcomeBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes welcomeBounce {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .welcome-label {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: 0.3rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            animation: welcomeSlideIn 0.6s ease-out 0.1s both;
+        }
+
+        .welcome-title {
+            color: #ffffff;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            animation: welcomeSlideIn 0.6s ease-out 0.2s both;
+            text-shadow: 0 0 60px rgba(217, 183, 89, 0.3);
+            text-align: center;
+            padding: 0 2rem;
+        }
+        .welcome-title .highlight {
+            color: #d9b759;
+            text-shadow: 0 0 40px rgba(217, 183, 89, 0.6);
+        }
+        @keyframes welcomeSlideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-sub {
+            color: rgba(255,255,255,0.4);
+            font-size: 1.4rem;
+            font-weight: 300;
+            letter-spacing: 0.15rem;
+            animation: welcomeSlideIn 0.6s ease-out 0.35s both;
+        }
+
+        .promo-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 2rem;
+        }
+        .promo-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .promo-header { text-align: center; margin-bottom: 2.5rem; }
+        .promo-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #d9b759, #c9a73c);
+            color: #000;
+            padding: 0.5rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            animation: promoFadeIn 0.5s ease-out;
+        }
+        @keyframes promoFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .promo-title { color: #fff; font-size: 2.2rem; font-weight: 700; letter-spacing: 0.05em; }
+        .promo-subtitle { color: rgba(255,255,255,0.4); font-size: 1rem; font-weight: 300; margin-top: 0.3rem; }
+
+        .promo-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .promo-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(217, 183, 89, 0.15);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            min-width: 280px;
+            max-width: 340px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            backdrop-filter: blur(10px);
+            animation: cardSlideUp 0.5s ease-out both;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .promo-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, #d9b759, transparent);
+            border-radius: 4px 0 0 4px;
+        }
+        .promo-card:nth-child(1) { animation-delay: 0.1s; }
+        .promo-card:nth-child(2) { animation-delay: 0.2s; }
+        .promo-card:nth-child(3) { animation-delay: 0.3s; }
+        .promo-card:nth-child(4) { animation-delay: 0.4s; }
+        .promo-card:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes cardSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .promo-card-name { color: #fff; font-size: 1.15rem; font-weight: 600; line-height: 1.3; }
+        .promo-card-shelf {
+            color: rgba(217, 183, 89, 0.7);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .promo-card-shelf::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #d9b759;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(217, 183, 89, 0.5);
+        }
+        .promo-card-prices {
+            display: flex;
+            align-items: baseline;
+            gap: 0.8rem;
+            margin-top: 0.3rem;
+        }
+        .promo-card-old { color: rgba(255,255,255,0.35); text-decoration: line-through; font-size: 0.95rem; font-weight: 400; }
+        .promo-card-new { color: #4ade80; font-size: 1.8rem; font-weight: 800; text-shadow: 0 0 20px rgba(74, 222, 128, 0.3); }
+        .promo-card-badge {
+            position: absolute;
+            top: 0.8rem; right: 0.8rem;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .promo-empty { color: rgba(255,255,255,0.3); font-size: 1.1rem; font-weight: 300; text-align: center; animation: promoFadeIn 0.5s ease-out; }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(15px);
+            padding: 0.6rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .status-left { display: flex; align-items: center; gap: 0.6rem; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: dotBlink 2s infinite; }
+        @keyframes dotBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .status-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 400; letter-spacing: 0.05em; }
+        .status-right { display: flex; align-items: center; gap: 1rem; }
+        .status-clock { color: rgba(255,255,255,0.3); font-size: 0.8rem; font-weight: 400; }
+        .status-brand { color: rgba(217, 183, 89, 0.4); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; }
+
+        /* Painel de controle */
+        .panel {
+            position: fixed;
+            top: 10px; right: 10px;
+            background: rgba(20,20,30,0.97);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            width: 340px;
+            max-height: 85vh;
+            overflow-y: auto;
+            z-index: 999;
+            display: none;
+            font-size: 12px;
+            color: #fff;
+        }
+        .panel.open { display: block; }
+        .panel h4 { color: #d9b759; margin: 0 0 12px; font-size: 14px; }
+        .panel label { display: block; color: #999; margin-bottom: 2px; font-size: 10px; text-transform: uppercase; }
+        .panel input, .panel select {
+            width: 100%; padding: 6px 8px; margin-bottom: 8px;
+            background: #1a1a2e; border: 1px solid #333;
+            color: #fff; border-radius: 4px; font-size: 12px; font-family: inherit;
+        }
+        .panel button {
+            width: 100%; padding: 8px; margin: 4px 0;
+            border: none; border-radius: 6px;
+            color: #fff; font-size: 12px; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: 0.2s;
+        }
+        .panel button:hover { opacity: 0.9; }
+        .btn-save { background: #3b82f6; }
+        .btn-test { background: #d9b759; color: #000; }
+        .btn-promo { background: #10b981; }
+        .btn-idle { background: #6366f1; }
+        .btn-fechar { background: #444; margin-top: 8px; }
+        .panel .section-title {
+            color: #d9b759; margin: 12px 0 6px; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 1px;
+            border-top: 1px solid #333; padding-top: 8px;
+        }
+        .panel .hint { color: #666; font-size: 10px; margin-top: 8px; }
+
+        /* Forcar layout vertical para teste */
+        body.force-portrait .idle-logo-container {
+            width: 38vh;
+            height: 38vh;
+            max-width: 360px;
+            max-height: 360px;
+            margin-bottom: 1rem;
+            margin-top: -6vh;
+        }
+        body.force-portrait .logo-small {
+            width: 22vh;
+            height: 22vh;
+            max-width: 220px;
+            max-height: 220px;
+        }
+        body.force-portrait .welcome-title { font-size: 10vh; }
+        body.force-portrait .welcome-label { font-size: 3.5vh; }
+        body.force-portrait .welcome-sub { font-size: 3vh; }
+        body.force-portrait .idle-text {
+            font-size: 2.4vh;
+            letter-spacing: 0.4rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        body.force-portrait .idle-text-small {
+            font-size: 1.7vh;
+            color: rgba(255,255,255,0.95);
+            font-weight: 500;
+        }
+        body.force-portrait .idle-brand {
+            font-size: 5.5vh;
+            margin-top: 1.5vh;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(255,255,255,0.25);
+        }
+        body.force-portrait .idle-brand-sub {
+            font-size: 2.4vh;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        body.force-portrait .promo-title { font-size: 4vh; }
+        body.force-portrait .promo-subtitle { font-size: 1.8vh; }
+        body.force-portrait .promo-tag { font-size: 1.4vh; }
+        body.force-portrait .promo-card {
+            min-width: unset;
+            max-width: 80vw;
+            width: 100%;
+            padding: 2vh 3vh;
+        }
+        body.force-portrait .promo-card-name { font-size: 2.2vh; }
+        body.force-portrait .promo-card-new { font-size: 3vh; }
+        body.force-portrait .promo-grid {
+            flex-direction: column;
+            align-items: center;
+            gap: 2vh;
+        }
+
+        /* Ajustes para monitor vertical (portrait) */
+        @media (orientation: portrait) {
+            .idle-logo-container {
+                width: 38vh;
+                height: 38vh;
+                max-width: 360px;
+                max-height: 360px;
+                margin-bottom: 1rem;
+                margin-top: -6vh;
+            }
+            .logo-small {
+                width: 22vh;
+                height: 22vh;
+                max-width: 220px;
+                max-height: 220px;
+            }
+            .welcome-title { font-size: 10vh; }
+            .welcome-label { font-size: 3.5vh; }
+            .welcome-sub { font-size: 3vh; }
+            .idle-text {
+                font-size: 2.4vh;
+                letter-spacing: 0.4rem;
+                color: #ffffff;
+                font-weight: 500;
+            }
+            .idle-text-small {
+                font-size: 1.7vh;
+                color: rgba(255,255,255,0.95);
+                font-weight: 500;
+            }
+            .idle-brand {
+                font-size: 5.5vh;
+                margin-top: 1.5vh;
+                color: #ffffff;
+                text-shadow: 0 0 40px rgba(255,255,255,0.25);
+            }
+            .idle-brand-sub {
+                font-size: 2.4vh;
+                color: #ffffff;
+                font-weight: 700;
+            }
+            .promo-title { font-size: 4vh; }
+            .promo-subtitle { font-size: 1.8vh; }
+            .promo-tag { font-size: 1.4vh; }
+            .promo-card {
+                min-width: unset;
+                max-width: 80vw;
+                width: 100%;
+                padding: 2vh 3vh;
+            }
+            .promo-card-name { font-size: 2.2vh; }
+            .promo-card-new { font-size: 3vh; }
+            .promo-grid {
+                flex-direction: column;
+                align-items: center;
+                gap: 2vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-title { font-size: 2.8rem; }
+            .promo-grid { gap: 1rem; }
+            .promo-card { min-width: 240px; padding: 1.2rem 1.5rem; }
+            .promo-card-new { font-size: 1.4rem; }
+            .panel { width: 90vw; right: 5vw; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg"></div>
+    <canvas id="particles"></canvas>
+
+    <!-- IDLE -->
+    <div class="idle-container active" id="idleContainer">
+        <div class="idle-logo-container" id="idleLogoContainer">
+            <img src="/logo.png" alt="Logo" class="logo-img" id="idleLogo">
+        </div>
+        <div class="idle-brand">TO GO</div>
+        <div class="idle-brand-sub">MERCADO 24 HORAS</div>
+        <div class="idle-text" id="idleText">Aguardando clientes</div>
+        <div class="idle-text-small" id="idleSub">BEM-VINDO A NOSSA LOJA</div>
+    </div>
+
+    <!-- BEM-VINDO -->
+    <div class="welcome-container" id="welcomeContainer">
+        <img src="/logo.png" alt="Logo" class="logo-small" id="welcomeLogo">
+        <div class="welcome-label" id="welcomeLabel">Bem-vindo</div>
+        <div class="welcome-title" id="welcomeTitle"><span class="highlight">A NOSSA LOJA</span></div>
+        <div class="welcome-sub" id="welcomeSub">Estamos felizes em recebe-lo</div>
+    </div>
+
+    <!-- PROMOCOES -->
+    <div class="promo-container" id="promoContainer">
+        <div class="promo-header">
+            <div class="promo-tag">Ofertas do Dia</div>
+            <div class="promo-title">Aproveite Nossas Promocoes</div>
+            <div class="promo-subtitle" id="promoSubtitle">Confira os itens em destaque</div>
+        </div>
+        <div class="promo-grid" id="promoGrid"></div>
+    </div>
+
+    <!-- Barra inferior -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span class="status-dot" id="statusDot"></span>
+            <span class="status-label" id="statusLabel">Sistema online</span>
+        </div>
+        <div class="status-right">
+            <span class="status-clock" id="clock">00:00</span>
+            <span class="status-brand" id="statusBrand">MONITOR</span>
+        </div>
+    </div>
+
+    <!-- Painel de controle -->
+    <div class="panel" id="panel">
+        <h4>Configuracao do Monitor</h4>
+
+        <div class="section-title">Identificacao (Control iD)</div>
+        <label>IP do Control iD</label>
+        <input type="text" id="cfg-controlid-ip" placeholder="192.168.1.100">
+        <label>Usuario</label>
+        <input type="text" id="cfg-controlid-user" placeholder="admin">
+        <label>Senha</label>
+        <input type="password" id="cfg-controlid-pass" placeholder="admin">
+        <label>Ou URL da API de entradas (opcional)</label>
+        <input type="text" id="cfg-api-url" placeholder="http://192.168.1.100/api/eventos">
+        <label>Intervalo de verificacao (segundos)</label>
+        <input type="number" id="cfg-intervalo" value="3" min="1" max="60">
+
+        <div class="section-title">Loja / Tela</div>
+        <label>Nome da loja</label>
+        <input type="text" id="cfg-loja" value="TRANS BUS">
+        <label>Texto de boas-vindas</label>
+        <input type="text" id="cfg-texto" value="Bem-vindo">
+        <label>Subtexto</label>
+        <input type="text" id="cfg-subtexto" value="Estamos felizes em recebe-lo">
+        <label>Texto idle</label>
+        <input type="text" id="cfg-idle" value="Aguardando clientes">
+        <label>Subtexto idle</label>
+        <input type="text" id="cfg-idle-sub" value="BEM-VINDO A NOSSA LOJA">
+        <label>Tempo exibindo bem-vindo (segundos)</label>
+        <input type="number" id="cfg-tempo" value="15" min="3" max="60">
+
+        <label>Layout da tela (teste)</label>
+        <select id="cfg-rotacao">
+            <option value="">Paisagem (padrao)</option>
+            <option value="force-portrait">Layout vertical (teste)</option>
+        </select>
+        <button class="btn-test" onclick="aplicarRotacao()">Aplicar Layout</button>
+
+        <div class="section-title">Testes / Controle</div>
+        <label>Nome para simular entrada</label>
+        <input type="text" id="sim-nome" placeholder="FULANO DE TAL">
+        <button class="btn-test" onclick="simularEntrada()">Simular Entrada</button>
+        <button class="btn-promo" onclick="mostrarPromocoes()">Mostrar Promocoes</button>
+        <button class="btn-idle" onclick="voltarIdle()">Voltar para Tela de Descanso</button>
+
+        <button class="btn-save" onclick="salvarConfig()">Salvar Configuracao</button>
+        <button class="btn-fechar" onclick="fecharPanel()">Fechar Painel</button>
+        <div class="hint">Pressione C para abrir/fechar este painel.<br>Clique na tela para fullscreen.</div>
+    </div>
+
+    <script>
+    (function() {
+        var idleContainer = document.getElementById('idleContainer');
+        var welcomeContainer = document.getElementById('welcomeContainer');
+        var promoContainer = document.getElementById('promoContainer');
+        var promoGrid = document.getElementById('promoGrid');
+        var promoSubtitle = document.getElementById('promoSubtitle');
+        var statusDot = document.getElementById('statusDot');
+        var statusLabel = document.getElementById('statusLabel');
+        var clockEl = document.getElementById('clock');
+        var welcomeTitle = document.getElementById('welcomeTitle');
+        var welcomeLabel = document.getElementById('welcomeLabel');
+        var welcomeSub = document.getElementById('welcomeSub');
+        var idleText = document.getElementById('idleText');
+        var idleSub = document.getElementById('idleSub');
+        var statusBrand = document.getElementById('statusBrand');
+
+        var config = {
+            controlIdIp: localStorage.getItem('mb-controlid-ip') || '',
+            controlIdUser: localStorage.getItem('mb-controlid-user') || 'admin',
+            controlIdPass: localStorage.getItem('mb-controlid-pass') || 'admin',
+            apiUrl: localStorage.getItem('mb-api-url') || '',
+            intervalo: parseInt(localStorage.getItem('mb-intervalo') || '3'),
+            loja: localStorage.getItem('mb-loja') || 'TRANS BUS',
+            texto: localStorage.getItem('mb-texto') || 'Bem-vindo',
+            subtexto: localStorage.getItem('mb-subtexto') || 'Estamos felizes em recebe-lo',
+            idle: localStorage.getItem('mb-idle') || 'Aguardando clientes',
+            idleSub: localStorage.getItem('mb-idle-sub') || 'BEM-VINDO A NOSSA LOJA',
+            tempo: parseInt(localStorage.getItem('mb-tempo') || '15'),
+            rotacao: localStorage.getItem('mb-rotacao') || ''
+        };
+
+        var audioCtx = null;
+        var idleTimer = null;
+        var es = null;
+
+        function updateClock() {
+            var d = new Date();
+            clockEl.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        }
+        updateClock();
+        setInterval(updateClock, 15000);
+
+        function playChime() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                var t = audioCtx.currentTime;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523, t);
+                osc.frequency.setValueAtTime(659, t + 0.1);
+                osc.frequency.setValueAtTime(784, t + 0.2);
+                gain.gain.setValueAtTime(0.12, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            } catch(e) {}
+        }
+
+        function hideAll() {
+            idleContainer.classList.remove('active');
+            welcomeContainer.classList.remove('active');
+            promoContainer.classList.remove('active');
+        }
+
+        function formatarNome(nome) {
+            if (!nome) return 'Cliente';
+            var partes = nome.trim().split(' ');
+            if (partes.length <= 2) return nome.toUpperCase();
+            return (partes[0] + ' ' + partes[partes.length - 1]).toUpperCase();
+        }
+
+        window.mostrarBemVindo = function(nome) {
+            if (idleTimer) clearTimeout(idleTimer);
+            hideAll();
+            welcomeTitle.innerHTML = '<span class="highlight">A NOSSA LOJA</span>';
+            welcomeLabel.textContent = config.texto;
+            welcomeSub.textContent = config.subtexto;
+            welcomeContainer.classList.add('active');
+            playChime();
+            statusLabel.textContent = 'Cliente identificado';
+            idleTimer = setTimeout(voltarIdle, config.tempo * 1000);
+        };
+
+        window.voltarIdle = function() {
+            if (idleTimer) clearTimeout(idleTimer);
+            hideAll();
+            idleContainer.classList.add('active');
+            statusLabel.textContent = 'Sistema online';
+        };
+
+        function renderPromos(promos) {
+            promoGrid.innerHTML = '';
+            if (!promos || promos.length === 0) {
+                promoGrid.innerHTML = '<div class="promo-empty">Nenhuma promocao no momento.<br>Volte em breve!</div>';
+                promoSubtitle.textContent = 'Novas ofertas em breve';
+                return;
+            }
+            promoSubtitle.textContent = promos.length + ' itens com precos especiais';
+            for (var i = 0; i < promos.length; i++) {
+                var p = promos[i];
+                if (p.ativo === false) continue;
+                var card = document.createElement('div');
+                card.className = 'promo-card';
+                var desconto = '';
+                if (p.preco_normal && p.preco_promo) {
+                    var normal = parseFloat((p.preco_normal || '').replace(/[^0-9,]/g, '').replace(',', '.'));
+                    var promo = parseFloat((p.preco_promo || '').replace(/[^0-9,]/g, '').replace(',', '.'));
+                    if (normal > 0 && promo > 0) {
+                        var pct = Math.round((1 - promo / normal) * 100);
+                        desconto = '<div class="promo-card-badge">-' + pct + '%</div>';
+                    }
+                }
+                card.innerHTML =
+                    desconto +
+                    '<div class="promo-card-name">' + (p.nome || 'Produto') + '</div>' +
+                    '<div class="promo-card-shelf">' + (p.prateleira || 'Consulte um vendedor') + '</div>' +
+                    '<div class="promo-card-prices">' +
+                        '<span class="promo-card-old">' + (p.preco_normal || '') + '</span>' +
+                        '<span class="promo-card-new">' + (p.preco_promo || '') + '</span>' +
+                    '</div>';
+                promoGrid.appendChild(card);
+            }
+        }
+
+        window.mostrarPromocoes = function() {
+            fetch('/api/monitor/promocoes')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (idleTimer) clearTimeout(idleTimer);
+                hideAll();
+                renderPromos(data.promocoes || []);
+                promoContainer.classList.add('active');
+                statusLabel.textContent = 'Exibindo promocoes';
+            });
+        };
+
+        window.simularEntrada = function() {
+            var nome = document.getElementById('sim-nome').value.trim();
+            if (!nome) nome = 'CLIENTE TESTE';
+            fetch('/api/monitor/simular', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({nome: nome})
+            }).catch(function(){});
+        };
+
+        window.salvarConfig = function() {
+            config.controlIdIp = document.getElementById('cfg-controlid-ip').value.trim();
+            config.controlIdUser = document.getElementById('cfg-controlid-user').value.trim();
+            config.controlIdPass = document.getElementById('cfg-controlid-pass').value;
+            config.apiUrl = document.getElementById('cfg-api-url').value.trim();
+            config.intervalo = parseInt(document.getElementById('cfg-intervalo').value) || 3;
+            config.loja = document.getElementById('cfg-loja').value.trim();
+            config.texto = document.getElementById('cfg-texto').value.trim();
+            config.subtexto = document.getElementById('cfg-subtexto').value.trim();
+            config.idle = document.getElementById('cfg-idle').value.trim();
+            config.idleSub = document.getElementById('cfg-idle-sub').value.trim();
+            config.tempo = parseInt(document.getElementById('cfg-tempo').value) || 15;
+            config.rotacao = document.getElementById('cfg-rotacao').value;
+
+            Object.keys(config).forEach(function(k) {
+                localStorage.setItem('mb-' + k, config[k]);
+            });
+
+            aplicarRotacao();
+
+            aplicarConfig();
+            enviarConfigServidor();
+            fecharPanel();
+        };
+
+        function aplicarConfig() {
+            idleText.textContent = config.idle;
+            idleSub.textContent = config.idleSub;
+            welcomeLabel.textContent = config.texto;
+            welcomeSub.textContent = config.subtexto;
+            statusBrand.textContent = config.loja || 'MONITOR';
+            aplicarRotacao(false);
+        }
+
+        window.aplicarRotacao = function(salvar) {
+            var rot = document.getElementById('cfg-rotacao').value;
+            document.body.classList.remove('force-portrait');
+            if (rot) document.body.classList.add(rot);
+            config.rotacao = rot;
+            if (salvar !== false) {
+                localStorage.setItem('mb-rotacao', rot);
+            }
+        };
+
+        function enviarConfigServidor() {
+            fetch('/api/monitor/config', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(config)
+            }).catch(function(){});
+        }
+
+        function carregarConfig() {
+            document.getElementById('cfg-controlid-ip').value = config.controlIdIp;
+            document.getElementById('cfg-controlid-user').value = config.controlIdUser;
+            document.getElementById('cfg-controlid-pass').value = config.controlIdPass;
+            document.getElementById('cfg-api-url').value = config.apiUrl;
+            document.getElementById('cfg-intervalo').value = config.intervalo;
+            document.getElementById('cfg-loja').value = config.loja;
+            document.getElementById('cfg-texto').value = config.texto;
+            document.getElementById('cfg-subtexto').value = config.subtexto;
+            document.getElementById('cfg-idle').value = config.idle;
+            document.getElementById('cfg-idle-sub').value = config.idleSub;
+            document.getElementById('cfg-tempo').value = config.tempo;
+            document.getElementById('cfg-rotacao').value = config.rotacao;
+            aplicarConfig();
+        }
+
+        window.fecharPanel = function() { document.getElementById('panel').classList.remove('open'); };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'c' || e.key === 'C') {
+                document.getElementById('panel').classList.toggle('open');
+            }
+        });
+
+        function connectSSE() {
+            if (es) es.close();
+            es = new EventSource('/api/monitor/stream');
+            es.onmessage = function(evt) {
+                try {
+                    var data = JSON.parse(evt.data);
+                    if (data.phase === 'welcome') window.mostrarBemVindo(data.nome || 'Cliente');
+                    else if (data.phase === 'promocoes') window.mostrarPromocoes();
+                    else if (data.phase === 'idle') window.voltarIdle();
+                } catch(e) {}
+            };
+            es.onerror = function() {
+                statusDot.style.background = '#ef4444';
+                statusLabel.textContent = 'Reconectando...';
+                es.close();
+                setTimeout(connectSSE, 5000);
+            };
+            es.onopen = function() {
+                statusDot.style.background = '#4ade80';
+                statusLabel.textContent = 'Sistema online';
+            };
+        }
+
+        function initParticles() {
+            var canvas = document.getElementById('particles');
+            var ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            var particles = [];
+            for (var i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.4 + 0.1,
+                    opacity: Math.random() * 0.4 + 0.05
+                });
+            }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(217, 183, 89, ' + p.opacity + ')';
+                    ctx.fill();
+                    p.y -= p.speed;
+                    if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+            window.addEventListener('resize', function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        initParticles();
+        carregarConfig();
+        enviarConfigServidor();
+        connectSSE();
+
+        document.addEventListener('click', function() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen().catch(function(){});
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
