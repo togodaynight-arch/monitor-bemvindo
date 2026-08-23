@@ -1,0 +1,13 @@
+{
+  "name": "sales-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "welcome": "node server-welcome.js",
+    "start-all": "node server-unificado.js & node server-welcome.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
