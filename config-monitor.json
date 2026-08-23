@@ -1,0 +1,30 @@
+{
+  "logoUrl": "/logo.png",
+  "idleBrand": "TESTE LOJA",
+  "idleBrandSub": "MERCADO 24 HORAS",
+  "idleText": "Aguardando clientes",
+  "idleSub": "BEM-VINDO A NOSSA LOJA",
+  "welcomeLabel": "Bem-vindo",
+  "welcomeTitle": "NOVO TITULO",
+  "welcomeSub": "Estamos felizes em recebe-lo",
+  "fonts": {
+    "global": "Poppins"
+  },
+  "sizes": {
+    "welcomeTitle": "12vh",
+    "idleBrandSub": "3vh",
+    "idleText": "3vh",
+    "welcomeLabel": "3vh",
+    "welcomeSub": "3vh",
+    "idleBrand": "12vh"
+  },
+  "colors": {
+    "welcomeTitle": "#ff0000",
+    "idleText": "#ffffff",
+    "idleBrand": "#ffffff",
+    "idleBrandSub": "#ffffff",
+    "idleSub": "#ffffff",
+    "welcomeLabel": "#ffffff",
+    "welcomeSub": "#ffffff"
+  }
+}
