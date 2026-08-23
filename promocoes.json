@@ -1,0 +1,50 @@
+{
+  "atualizado": "2026-08-09",
+  "promocoes": [
+    {
+      "ean": "0123547-8",
+      "nome": "Coca Cola PET 2L",
+      "preco_normal": "R$ 11,94",
+      "preco_promo": "R$ 8,90",
+      "prateleira": "Corredor A - Prateleira 3",
+      "wled_output": 0,
+      "ativo": true
+    },
+    {
+      "ean": "0121516-7",
+      "nome": "Energético Red Bull 250ml",
+      "preco_normal": "R$ 13,97",
+      "preco_promo": "R$ 9,90",
+      "prateleira": "Corredor B - Prateleira 1",
+      "wled_output": 1,
+      "ativo": true
+    },
+    {
+      "ean": "0113348-9",
+      "nome": "Energético Monster Green 473ml",
+      "preco_normal": "R$ 11,99",
+      "preco_promo": "R$ 7,99",
+      "prateleira": "Corredor B - Prateleira 2",
+      "wled_output": 1,
+      "ativo": true
+    },
+    {
+      "ean": "0112179-0",
+      "nome": "Salgadinho Pastelina 100g",
+      "preco_normal": "R$ 4,99",
+      "preco_promo": "R$ 3,50",
+      "prateleira": "Corredor C - Prateleira 1",
+      "wled_output": 2,
+      "ativo": false
+    },
+    {
+      "ean": "0112725-0",
+      "nome": "Água Fonte da Ilha 500ml",
+      "preco_normal": "R$ 2,99",
+      "preco_promo": "R$ 1,99",
+      "prateleira": "Corredor A - Prateleira 1",
+      "wled_output": 0,
+      "ativo": true
+    }
+  ]
+}
