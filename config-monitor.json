@@ -1,30 +1,31 @@
 {
   "logoUrl": "/logo.png",
-  "idleBrand": "TESTE LOJA",
+  "idleBrand": "TO GO",
   "idleBrandSub": "MERCADO 24 HORAS",
   "idleText": "Aguardando clientes",
   "idleSub": "BEM-VINDO A NOSSA LOJA",
   "welcomeLabel": "Bem-vindo",
-  "welcomeTitle": "NOVO TITULO",
+  "welcomeTitle": "A NOSSA LOJA",
   "welcomeSub": "Estamos felizes em recebe-lo",
   "fonts": {
-    "global": "Poppins"
+    "global": "Montserrat"
   },
   "sizes": {
-    "welcomeTitle": "12vh",
-    "idleBrandSub": "3vh",
-    "idleText": "3vh",
-    "welcomeLabel": "3vh",
-    "welcomeSub": "3vh",
-    "idleBrand": "12vh"
+    "idleBrand": "5.5vh",
+    "idleBrandSub": "2.4vh",
+    "idleText": "2.4vh",
+    "idleSub": "1.7vh",
+    "welcomeLabel": "3.5vh",
+    "welcomeTitle": "10vh",
+    "welcomeSub": "3vh"
   },
   "colors": {
-    "welcomeTitle": "#ff0000",
-    "idleText": "#ffffff",
     "idleBrand": "#ffffff",
     "idleBrandSub": "#ffffff",
-    "idleSub": "#ffffff",
-    "welcomeLabel": "#ffffff",
-    "welcomeSub": "#ffffff"
+    "idleText": "#ffffff",
+    "idleSub": "rgba(255,255,255,0.95)",
+    "welcomeLabel": "rgba(255,255,255,0.5)",
+    "welcomeTitle": "#d9b759",
+    "welcomeSub": "rgba(255,255,255,0.4)"
   }
 }
