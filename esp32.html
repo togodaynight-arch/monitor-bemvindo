@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle ESP32</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0a12;color:#fff;min-height:100vh;padding:16px}
+.wrap{max-width:540px;margin:0 auto}
+h1{font-size:21px;color:#d9b759;margin-bottom:4px;letter-spacing:1px}
+p.sub{color:#666;font-size:12px;margin-bottom:18px}
+.card{background:#15151f;border:1px solid #26262f;border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:13px;color:#d9b759;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+label{display:block;color:#999;font-size:10px;text-transform:uppercase;margin-bottom:4px}
+input,select{width:100%;padding:10px;margin-bottom:12px;background:#1a1a28;border:1px solid #333;color:#fff;border-radius:7px;font-size:14px;font-family:inherit}
+input[type="range"]{padding:0;accent-color:#d9b759;cursor:pointer}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px}
+.btn-azul{background:#3b82f6;color:#fff}
+.btn-verde{background:#0f2b1c;color:#34d399;border:1px solid #14532d}
+.btn-verde.on{background:#14532d;color:#a7f3d0}
+.btn-cinza{background:#1a1a2e;color:#999;border:1px solid #333}
+.btn-vermelho{background:#2b0f0f;color:#f87171;border:1px solid #7f1d1d}
+.msg{padding:12px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.msg.ok{display:block;background:#0f2b1c;color:#34d399;border:1px solid #14532d}
+.msg.erro{display:block;background:#2b0f0f;color:#f87171;border:1px solid #7f1d1d}
+.add-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.add-row button{flex:1 1 48%;padding:10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#1a1a2e;border:1px solid #333;color:#d9b759}
+.add-row button:active{opacity:0.8}
+.stat{background:#0a0a12;border:1px solid #222;border-radius:8px;padding:8px 10px;flex:1 1 30%;text-align:center;font-size:11px;color:#666;text-transform:uppercase}
+.stat b{display:block;color:#fff;font-size:18px;margin-top:2px}
+.range-val{color:#d9b759;font-weight:700}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.ok{background:#0f2b1c;color:#34d399}
+.badge.off{background:#2b0f0f;color:#f87171}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>🔌 Controle ESP32</h1>
+    <p class="sub">Relés, fita LED, porta com eletroímã e sensores.</p>
+
+    <div class="msg" id="msg"></div>
+
+    <div class="card">
+        <h2>🌐 Conexão</h2>
+        <label>IP do ESP32</label>
+        <input type="text" id="esp-ip" placeholder="192.168.0.105">
+        <button class="btn btn-azul" onclick="espConectar()">🔄 Conectar</button>
+        <div id="esp-conectado" style="display:none;margin-top:4px"><span class="badge ok">Conectado</span></div>
+    </div>
+
+    <div class="card" style="display:none" id="card-controls">
+        <h2>🔘 Relés</h2>
+        <div class="add-row" id="esp-reles" style="margin-bottom:10px"></div>
+
+        <h2>🚪 Porta (eletroímã)</h2>
+        <label>Tempo aberto (s)</label>
+        <input type="number" id="esp-door-dur" min="1" max="300" value="5">
+        <div class="add-row" id="esp-porta" style="margin-bottom:10px"></div>
+
+        <h2>💡 Fita LED</h2>
+        <div class="add-row" id="esp-led-btns" style="margin-bottom:8px">
+            <button type="button" id="esp-led-toggle" onclick="espLedToggle()">🟢 Ligar</button>
+            <button type="button" onclick="espLedCor('#ffffff')">⬜ Branco</button>
+            <button type="button" onclick="espLedCor('#ffaa00')">🟠 Amarelo</button>
+            <button type="button" onclick="espLedCor('#ff0000')">🔴 Vermelho</button>
+            <button type="button" onclick="espLedCor('#0080ff')">🔵 Azul</button>
+            <button type="button" onclick="espLedCor('#00ff00')">🟢 Verde</button>
+            <button type="button" onclick="espLedEfeito('arcoiris')">🌈 Arco-íris</button>
+            <button type="button" onclick="espLedEfeito('confete')">🎉 Confete</button>
+            <button type="button" onclick="espLedEfeito('pulso')">✨ Pulso</button>
+            <button type="button" onclick="espLedEfeito('chase')">🏃 Chase</button>
+        </div>
+        <label>Brilho: <span class="range-val" id="esp-brilho-val">100%</span></label>
+        <input type="range" id="esp-brilho" min="0" max="100" value="100" oninput="espLedBrilho()">
+
+        <h2>📊 Sensores</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <div class="stat">Ruído<b id="esp-noise">-</b></div>
+            <div class="stat">Distância<b id="esp-dist">-</b></div>
+            <div class="stat">Presença<b id="esp-pir">-</b></div>
+        </div>
+    </div>
+</div>
+
+<script>
+var ESP_IP = localStorage.getItem('esp_ip') || '192.168.0.105';
+var espState = {relays:[], led:{}, door:{}, sensors:{}, mode:''};
+var espTimer = null;
+
+function $(id){ return document.getElementById(id); }
+function espMsg(t, ok){ var m=$('msg'); m.textContent=t; m.className='msg '+(ok?'ok':'erro'); }
+function espUrl(){ return 'http://' + ($('esp-ip').value.trim() || ESP_IP); }
+function espFetch(path, opts){
+    opts = opts || {};
+    if(!opts.headers) opts.headers = {};
+    opts.headers['Content-Type'] = 'application/json';
+    if(opts.body) opts.body = JSON.stringify(opts.body);
+    return fetch(espUrl()+path, opts);
+}
+
+function espConectar(){
+    ESP_IP = $('esp-ip').value.trim() || ESP_IP;
+    localStorage.setItem('esp_ip', ESP_IP);
+    espFetch('/api/status').then(function(r){return r.json()}).then(function(s){
+        espState = s || espState;
+        espMsg('ESP32 conectado · IP ' + s.ip, true);
+        $('esp-conectado').style.display = 'block';
+        $('card-controls').style.display = 'block';
+        espRender();
+        if(espTimer) clearInterval(espTimer);
+        espTimer = setInterval(espRefresh, 3000);
+    }).catch(function(){
+        espMsg('Não conectou. Verifique o IP e se o ESP32 está na rede da loja.', false);
+        $('esp-conectado').style.display = 'none';
+        $('card-controls').style.display = 'none';
+    });
+}
+
+function espRefresh(){
+    espFetch('/api/status').then(function(r){return r.json()}).then(function(s){
+        espState = s || espState;
+        espRender();
+    }).catch(function(){});
+}
+
+function espPost(path, obj){
+    return espFetch(path, {method:'POST', body:obj}).then(function(r){return r.json()})
+        .catch(function(){ espMsg('Falha na comunicação com o ESP32.', false); throw new Error('esp fail'); });
+}
+
+function espRender(){
+    var reles = $('esp-reles');
+    reles.innerHTML = '';
+    (espState.relays||[]).forEach(function(r,i){
+        var b = document.createElement('button');
+        b.type='button';
+        b.className = r.on ? 'btn-verde on' : 'btn-cinza';
+        b.textContent = (r.on?'● ON':'○ OFF') + ' · ' + r.name;
+        b.style.flex = '1 1 48%';
+        b.onclick = function(){ espPost('/api/relay', {idx:i, on:!r.on}).then(espRefresh); };
+        reles.appendChild(b);
+    });
+
+    var porta = $('esp-porta');
+    porta.innerHTML = '';
+    var bAbrir = document.createElement('button'); bAbrir.type='button';
+    bAbrir.textContent = '🚪 Abrir porta';
+    bAbrir.onclick = function(){ espPost('/api/door', {action:'open', duration:+$('esp-door-dur').value}).then(espRefresh); };
+    porta.appendChild(bAbrir);
+    var bFechar = document.createElement('button'); bFechar.type='button';
+    bFechar.textContent = '🔒 Fechar';
+    bFechar.onclick = function(){ espPost('/api/door', {action:'close'}).then(espRefresh); };
+    porta.appendChild(bFechar);
+
+    var on = espState.led && espState.led.on;
+    var tg = $('esp-led-toggle');
+    tg.textContent = on ? '🔴 Desligar' : '🟢 Ligar';
+    tg.style.background = on ? '#2b0f0f' : '#0f2b1c';
+    tg.style.color = on ? '#f87171' : '#34d399';
+
+    $('esp-noise').textContent = (espState.sensors&&espState.sensors.noise) != null ? espState.sensors.noise : '-';
+    $('esp-dist').textContent = (espState.sensors&&espState.sensors.dist) != null ? espState.sensors.dist : '-';
+    $('esp-pir').textContent = (espState.sensors&&espState.sensors.pir) ? 'SIM' : 'não';
+}
+
+function espLedToggle(){ espPost('/api/led', {on: !(espState.led&&espState.led.on)}).then(espRefresh); }
+function espLedCor(c){ espPost('/api/led', {on:true, color:c.replace('#','')}).then(espRefresh); }
+function espLedBrilho(){
+    var v = parseInt($('esp-brilho').value)||100;
+    $('esp-brilho-val').textContent = v + '%';
+    espPost('/api/led', {brightness:v}).then(espRefresh);
+}
+function espLedEfeito(e){ espPost('/api/led', {on:true, effect:e}).then(espRefresh); }
+
+$('esp-ip').value = ESP_IP;
+</script>
+</body>
+</html>

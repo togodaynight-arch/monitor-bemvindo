@@ -327,6 +327,13 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // Controle ESP32 (reles, LED, porta eletroima e sensores)
+    if (url === '/esp32' || url === '/esp32/') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end(fs.readFileSync(path.join(__dirname, 'esp32.html')));
+        return;
+    }
+
     res.writeHead(404);
     res.end('404');
 });
