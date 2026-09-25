@@ -44,9 +44,9 @@ input[type="range"]{padding:0;accent-color:#d9b759;cursor:pointer}
 
     <div class="card">
         <h2>🌐 Conexão</h2>
-        <label>IP do ESP32</label>
+        <label>IP do ESP32 <span class="hint">(deixe em branco para procurar automaticamente)</span></label>
         <input type="text" id="esp-ip" placeholder="192.168.0.105">
-        <button class="btn btn-azul" onclick="espConectar()">🔄 Conectar</button>
+        <button class="btn btn-azul" onclick="espConectar()">🔄 Procurar e conectar</button>
         <div id="esp-conectado" style="display:none;margin-top:4px"><span class="badge ok">Conectado</span></div>
     </div>
 
@@ -85,13 +85,15 @@ input[type="range"]{padding:0;accent-color:#d9b759;cursor:pointer}
 </div>
 
 <script>
-var ESP_IP = localStorage.getItem('esp_ip') || '192.168.0.105';
+var ESP_IP = localStorage.getItem('esp_ip') || '';
 var espState = {relays:[], led:{}, door:{}, sensors:{}, mode:''};
 var espTimer = null;
+var espAchado = false;
+var currentIp = '';
 
 function $(id){ return document.getElementById(id); }
 function espMsg(t, ok){ var m=$('msg'); m.textContent=t; m.className='msg '+(ok?'ok':'erro'); }
-function espUrl(){ return 'http://' + ($('esp-ip').value.trim() || ESP_IP); }
+function espUrl(){ return 'http://' + currentIp; }
 function espFetch(path, opts){
     opts = opts || {};
     if(!opts.headers) opts.headers = {};
@@ -100,25 +102,172 @@ function espFetch(path, opts){
     return fetch(espUrl()+path, opts);
 }
 
-function espConectar(){
-    ESP_IP = $('esp-ip').value.trim() || ESP_IP;
-    localStorage.setItem('esp_ip', ESP_IP);
-    espFetch('/api/status').then(function(r){return r.json()}).then(function(s){
-        espState = s || espState;
-        espMsg('ESP32 conectado · IP ' + s.ip, true);
-        $('esp-conectado').style.display = 'block';
-        $('card-controls').style.display = 'block';
-        espRender();
-        if(espTimer) clearInterval(espTimer);
-        espTimer = setInterval(espRefresh, 3000);
-    }).catch(function(){
-        espMsg('Não conectou. Verifique o IP e se o ESP32 está na rede da loja.', false);
-        $('esp-conectado').style.display = 'none';
-        $('card-controls').style.display = 'none';
+// ===== Gera candidatos de IP na rede local =====
+// Detecta a subrede atual via WebRTC e varre só ela (rápido)
+function detectaSubrede(){
+    return new Promise(function(resolve){
+        try{
+            var pc = new (window.RTCPeerConnection || window.webkitRTCPeerConnection)();
+            pc.createDataChannel('');
+            pc.createOffer().then(function(offer){ return pc.setLocalDescription(offer); })
+            .then(function(){
+                setTimeout(function(){
+                    var cands = pc.localDescription.sdp.match(/[\d]+\.[\d]+\.[\d]+\.[\d]+/g) || [];
+                    var local = null;
+                    cands.forEach(function(c){ if(!c.startsWith('0.') && !c.startsWith('127.')) local = c; });
+                    pc.close();
+                    resolve(local);
+                }, 400);
+            }).catch(function(){ resolve(null); });
+        }catch(e){ resolve(null); }
     });
 }
 
+async function candidatos(){
+    // 1. IP manual / salvo
+    var lista = [];
+    var manual = $('esp-ip').value.trim();
+    if(manual) lista.push(manual);
+    if(ESP_IP && ESP_IP !== manual) lista.push(ESP_IP);
+
+    // 2. subrede onde ESTE dispositivo está
+    var localIp = await detectaSubrede();
+    var subredes = [];
+    if(localIp){
+        var partes = localIp.split('.');
+        subredes.push(partes.slice(0,3).join('.') + '.');
+    }
+    // 3. subredes comuns de fallback
+    ['192.168.0.','192.168.1.','192.168.15.','192.168.100.','10.0.0.','10.0.1.','172.16.0.'].forEach(function(s){
+        if(subredes.indexOf(s)===-1) subredes.push(s);
+    });
+    subredes.forEach(function(su){
+        for(var i=1;i<=254;i++){
+            if(i<=5 || i===10 || i===50 || i===100 || i===105 || (i>=120 && i<=140) || (i>=200 && i<=210)){
+                lista.push(su+i);
+            }
+        }
+        lista.push(su+'105');
+    });
+    lista.push('esp32.local');
+    lista.push('192.168.4.1');
+    return lista.filter(function(v,i,a){ return a.indexOf(v)===i; });
+}
+
+// ===== Testa um IP: responde /api/status? (timeout 1.5s) =====
+function testaIP(ip){
+    return new Promise(function(resolve){
+        var controller = new AbortController();
+        var t = setTimeout(function(){ controller.abort(); resolve(null); }, 1500);
+        fetch('http://'+ip+'/api/status', {signal: controller.signal})
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+        .then(function(s){
+            if(s && s.mode && s.relays){
+                clearTimeout(t);
+                resolve({ip:ip, state:s});
+            } else { clearTimeout(t); resolve(null); }
+        })
+        .catch(function(){ clearTimeout(t); resolve(null); });
+    });
+}
+
+// ===== Descobre o ESP32 varrendo em lotes paralelos =====
+async function descobrir(){
+    var ipManual = $('esp-ip').value.trim();
+    if(ipManual){
+        var r0 = await testaIP(ipManual);
+        if(r0) return {ip:r0.ip, manual:true, state:r0.state};
+    }
+    var lista = await candidatos();
+    var LOTE = 20;   // testa 20 ao mesmo tempo
+    for(var s=0; s<lista.length; s+=LOTE){
+        var fatia = lista.slice(s, s+LOTE);
+        var resultados = await Promise.all(fatia.map(function(ip){ return testaIP(ip); }));
+        for(var j=0;j<resultados.length;j++){
+            if(resultados[j]) return {ip:resultados[j].ip, manual:false, state:resultados[j].state};
+        }
+    }
+    return null;
+}
+
+async function espConectar(){
+    espMsg('Procurando ESP32 na rede...', true);
+    var achado = await descobrir();
+    if(!achado){
+        espMsg('Não encontrei o ESP32. Verifique se este aparelho está na MESMA rede Wi-Fi do ESP32 (sem 4G/5G).', false);
+        $('esp-conectado').style.display = 'none';
+        $('card-controls').style.display = 'none';
+        return;
+    }
+    currentIp = achado.ip;
+    ESP_IP = achado.ip;
+    localStorage.setItem('esp_ip', ESP_IP);
+    espState = achado.state || espState;
+    espMsg('Encontrado: ' + ESP_IP + (achado.manual ? '' : ' (detecção automática)'), true);
+    $('esp-ip').value = ESP_IP;
+    $('esp-conectado').style.display = 'block';
+    $('card-controls').style.display = 'block';
+    espRender();
+    if(espTimer) clearInterval(espTimer);
+    espTimer = setInterval(espRefresh, 3000);
+}
+
+// ===== Testa um IP: responde /api/status? =====
+function testaIP(ip){
+    return new Promise(function(resolve){
+        var controller = new AbortController();
+        var t = setTimeout(function(){ controller.abort(); resolve(null); }, 700);
+        fetch('http://'+ip+'/api/status', {signal: controller.signal})
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+        .then(function(s){
+            if(s && s.mode && s.relays){
+                clearTimeout(t);
+                resolve({ip:ip, state:s});
+            } else { clearTimeout(t); resolve(null); }
+        })
+        .catch(function(){ clearTimeout(t); resolve(null); });
+    });
+}
+
+// ===== Descobre o ESP32 na rede automaticamente =====
+async function descobrir(){
+    var ipManual = $('esp-ip').value.trim();
+    if(ipManual){ return {ip:ipManual, manual:true}; }
+    var lista = candidatos();
+    for(var i=0;i<lista.length;i++){
+        var r = await testaIP(lista[i]);
+        if(r){ return {ip:r.ip, manual:false}; }
+    }
+    return null;
+}
+
+async function espConectar(){
+    espMsg('Procurando ESP32 na rede...', true);
+    var achado = await descobrir();
+    if(!achado){
+        espMsg('Não encontrei o ESP32. Verifique se este aparelho está na MESMA rede Wi-Fi do ESP32.', false);
+        $('esp-conectado').style.display = 'none';
+        $('card-controls').style.display = 'none';
+        return;
+    }
+    currentIp = achado.ip;
+    ESP_IP = achado.ip;
+    localStorage.setItem('esp_ip', ESP_IP);
+    espState = achado.state || espState;
+    espMsg('Encontrado: ' + (achado.manual ? ESP_IP : ESP_IP + ' (automático)'), true);
+$('esp-ip').value = ESP_IP;
+
+// Auto-conecta ao abrir (se já souber o IP da última vez)
+setTimeout(function(){ espConectar(); }, 600);
+    $('esp-conectado').style.display = 'block';
+    $('card-controls').style.display = 'block';
+    espRender();
+    if(espTimer) clearInterval(espTimer);
+    espTimer = setInterval(espRefresh, 3000);
+}
+
 function espRefresh(){
+    if(!currentIp) return;
     espFetch('/api/status').then(function(r){return r.json()}).then(function(s){
         espState = s || espState;
         espRender();
