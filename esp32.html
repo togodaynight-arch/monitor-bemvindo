@@ -51,7 +51,20 @@ input[type="range"]{padding:0;accent-color:#d9b759;cursor:pointer}
     </div>
 
     <div class="card" style="display:none" id="card-controls">
-        <h2>🔘 Relés</h2>
+        <h2>📶 Trocar rede Wi-Fi do ESP32</h2>
+        <p style="color:#999;font-size:12px;margin-bottom:8px">Escolha a nova rede, digite a senha e o ESP32 se conecta sozinho.</p>
+        <button class="btn btn-cinza" onclick="espScanWifi()">📡 Escanear redes</button>
+        <select id="esp-wifi-list" style="display:none"></select>
+        <div id="esp-wifi-manual" style="display:none">
+            <label>Nome da rede (SSID)</label>
+            <input type="text" id="esp-wifi-ssid" placeholder="NOME_DA_REDE">
+        </div>
+        <label>Senha da rede</label>
+        <input type="password" id="esp-wifi-pass" placeholder="senha">
+        <button class="btn btn-azul" onclick="espTrocarWifi()">💾 Trocar rede e conectar</button>
+        <div class="msg" id="esp-wifi-msg"></div>
+
+        <h2 style="margin-top:6px">🔘 Relés</h2>
         <div class="add-row" id="esp-reles" style="margin-bottom:10px"></div>
 
         <h2>🚪 Porta (eletroímã)</h2>
@@ -277,6 +290,43 @@ function espRefresh(){
 function espPost(path, obj){
     return espFetch(path, {method:'POST', body:obj}).then(function(r){return r.json()})
         .catch(function(){ espMsg('Falha na comunicação com o ESP32.', false); throw new Error('esp fail'); });
+}
+
+// ===== TROCA DE REDE WI-FI =====
+function espWifiMsg(t, ok){ var m=$('esp-wifi-msg'); m.textContent=t; m.className='msg '+(ok?'ok':'erro'); }
+
+function espScanWifi(){
+    espWifiMsg('Escaneando redes...', true);
+    espFetch('/api/wifi/scan').then(function(r){return r.json()}).then(function(d){
+        if(!d.ok){ espWifiMsg('Falha no escaneamento.', false); return; }
+        var sel = $('esp-wifi-list');
+        sel.innerHTML = '';
+        (d.networks||[]).forEach(function(n){
+            var o = document.createElement('option');
+            o.value = n.ssid;
+            o.textContent = n.ssid + '  ·  ' + n.security + '  ·  sinal ' + n.rssi;
+            sel.appendChild(o);
+        });
+        sel.style.display = 'block';
+        $('esp-wifi-manual').style.display = 'block';
+        $('esp-wifi-ssid').value = d.current_ssid || '';
+        espWifiMsg('Encontrei ' + d.networks.length + ' redes. Escolha uma.', true);
+    }).catch(function(){ espWifiMsg('Erro ao escanear. Verifique a conexão.', false); });
+}
+
+function espTrocarWifi(){
+    var ssid = $('esp-wifi-list').style.display !== 'none' && $('esp-wifi-list').value
+        ? $('esp-wifi-list').value
+        : $('esp-wifi-ssid').value.trim();
+    var pass = $('esp-wifi-pass').value;
+    if(!ssid){ espWifiMsg('Digite ou escolha o nome da rede.', false); return; }
+    espWifiMsg('Salvando e conectando na rede "' + ssid + '"...', true);
+    espPost('/api/wifi/config', {ssid:ssid, password:pass}).then(function(d){
+        if(d.ok){
+            espWifiMsg('Rede salva! O ESP32 vai se conectando em alguns segundos. Recarregue a página na nova rede.', true);
+            setTimeout(function(){ location.reload(); }, 4000);
+        }
+    }).catch(function(){ espWifiMsg('Falha ao trocar rede.', false); });
 }
 
 function espRender(){
